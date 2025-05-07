@@ -34,10 +34,11 @@ def track_messages(client, message):
     """ Theo dõi tin nhắn mới trong bất kỳ nhóm nào và cập nhật thống kê vào MongoDB """
     update_message_count(message.from_user.id, message.chat.id)
 
-@app.on_message(filters.command("top10", prefixes=["/", "!"]) & filters.group)
+@app.on_message(filters.command("top", prefixes=["/", "!"]) & filters.group)
 async def send_top10(client, message):
     """ Gửi danh sách top 10 người nhắn nhiều nhất khi có lệnh /top10 trong nhóm hiện tại """
     chat_id = message.chat.id
+    now = datetime.now()
 
     top_weekly = collection.find({"chat_id": chat_id}).sort("weekly_count", -1).limit(10)
     top_monthly = collection.find({"chat_id": chat_id}).sort("monthly_count", -1).limit(10)
@@ -46,7 +47,6 @@ async def send_top10(client, message):
     message_text += "**📅 Trong tuần:**\n" + "\n".join([f"- [{user['user_id']}](tg://user?id={user['user_id']}): {user['weekly_count']} tin nhắn" for user in top_weekly])
     message_text += "\n\n**🗓 Trong tháng:**\n" + "\n".join([f"- [{user['user_id']}](tg://user?id={user['user_id']}): {user['monthly_count']} tin nhắn" for user in top_monthly])
 
-    await app.send_message(message_text, disable_web_page_preview=True)
-
+    await app.send_message(message.chat.id, message_text, disable_web_page_preview=True)
 print("✅ Bot đang chạy với MongoDB...")
 app.run()
